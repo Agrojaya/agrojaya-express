@@ -1,4 +1,4 @@
-const db = require('../config/Database'); 
+const db = require('../config/Database');
 const path = require('path');
 
 // Simpan Paket
@@ -24,10 +24,9 @@ exports.createPaket = async (req, res) => {
 
         // Simpan data paket ke database
         await db.promise().query(`
-            INSERT INTO paket (nama_paket, harga, variasi_bibit, fitur, detail, photo)
-            VALUES (?, ?, ?, ?, ?, ?)`, [
+            INSERT INTO packages (name, description, price, photo)
+            VALUES (?, ?, ?, ?)`, [
             nama_paket,
-            harga,
             JSON.stringify(variasi_bibit),
             JSON.stringify(fitur),
             JSON.stringify(detail),
@@ -45,7 +44,7 @@ exports.createPaket = async (req, res) => {
 exports.getPaket = async (req, res) => {
     try {
         const [paket] = await db.promise().query(`
-            SELECT * FROM paket`);
+            SELECT * FROM packages`);  // Change 'paket' to 'packages'
 
         res.status(200).json(paket);
     } catch (error) {
@@ -55,21 +54,20 @@ exports.getPaket = async (req, res) => {
 };
 
 exports.getPaketById = async (req, res) => {
-    const { id } = req.params; // Ambil id dari parameter URL
+    const { id } = req.params;
 
     try {
         const [paket] = await db.promise().query(`
-            SELECT * FROM paket WHERE id = ?`, [id]);
+            SELECT * FROM packages WHERE id = ?`, [id]); // Change 'paket' to 'packages'
 
         // Jika paket tidak ditemukan
         if (paket.length === 0) {
             return res.status(404).json({ msg: "paket tidak ditemukan" });
         }
 
-        res.status(200).json(paket[0]); // Kembalikan paket pertama jika ditemukan
+        res.status(200).json(paket[0]);  // Kembalikan paket pertama jika ditemukan
     } catch (error) {
-        console.error("Error in getpaketById:", error);
+        console.error("Error in getPaketById:", error);
         res.status(500).json({ msg: "Gagal mengambil data paket", error: error.message });
     }
 };
-
