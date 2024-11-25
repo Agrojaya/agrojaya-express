@@ -9,7 +9,7 @@ const UserRoute = require ("./routes/UserRoute.js");
 const PaketRoute = require ("./routes/PaketRoute.js");
 const ArtikelRoute = require ("./routes/ArtikelRoute.js");
 const TransactionRoute = require("./routes/TransactionRoute.js");
-
+const ActivityRoute = require("./routes/ActivityRoute.js");
 
 dotenv.config();
 const app = express();
@@ -40,7 +40,7 @@ app.use(UserRoute);
 app.use(PaketRoute);
 app.use(ArtikelRoute);
 app.use(TransactionRoute);
-
+app.use(ActivityRoute);
 
 app.listen(PORT, server_host, () => {
     console.log(`Server up and running on port ${PORT}...`);
