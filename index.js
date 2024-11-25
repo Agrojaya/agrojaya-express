@@ -8,6 +8,7 @@ const FileUpload = require("express-fileupload");
 const UserRoute = require ("./routes/UserRoute.js");
 const PaketRoute = require ("./routes/PaketRoute.js");
 const ArtikelRoute = require ("./routes/ArtikelRoute.js");
+const TransactionRoute = require("./routes/TransactionRoute.js");
 
 
 dotenv.config();
@@ -25,7 +26,10 @@ const server_host = process.env.YOUR_HOST || '0.0.0.0';
     }
 })();
 
-app.use(cors({ credentials:false, }));
+app.use(cors({
+    origin: 'http://localhost:5173', // URL frontend
+    credentials: true,              // Enable credentials (cookies)
+}));
 app.use(cookieParser());
 app.use(express.json());
 app.use(FileUpload());
@@ -35,6 +39,8 @@ app.use(bodyParser.json());
 app.use(UserRoute);
 app.use(PaketRoute);
 app.use(ArtikelRoute);
+app.use(TransactionRoute);
+
 
 app.listen(PORT, server_host, () => {
     console.log(`Server up and running on port ${PORT}...`);
