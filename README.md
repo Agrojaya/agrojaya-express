@@ -2,4 +2,4 @@ Instal dependensi:
 npm install
 
 Run backend :
-node server.js
+node index.js
