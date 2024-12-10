@@ -1,12 +1,18 @@
 const express = require("express");
 const {
-    createArtikel, getArtikel, getArtikelById
-} = require ("../controllers/Artikel.js");
+  getArtikel,
+  getArtikelById,
+  createArtikel,
+  updateArtikel,
+  deleteArtikel,
+} = require("../controllers/Artikel");
 
 const router = express.Router();
 
-router.post('/artikel', createArtikel);
-router.get('/data_artikel', getArtikel);
-router.get('/data_artikel/:id', getArtikelById);
- 
+router.get("/api/artikel", getArtikel);
+router.get("/api/artikel/:id", getArtikelById);
+router.post("/api/artikel", createArtikel);
+router.put("/api/artikel/:id", updateArtikel);
+router.delete("/api/artikel/:id", deleteArtikel);
+
 module.exports = router;

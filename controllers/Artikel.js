@@ -1,74 +1,176 @@
-const db = require('../config/Database'); 
-const path = require('path');
+const db = require("../config/Database.js");
+const path = require("path");
+const fs = require("fs");
 
-
+// Simpan Artikel
 exports.createArtikel = async (req, res) => {
-    const { judul, penulis, tanggal, isi } = req.body;
+  const { judul, penulis, tanggal, isi } = req.body;
 
-    try {
-        let link = "";
-
-        // Jika ada file yang diunggah
-        if (req.files && req.files.photo) {
-            const photo = Array.isArray(req.files.photo) ? req.files.photo[0] : req.files.photo;
-            const photoName = photo.md5 + path.extname(photo.name); // Nama file unik
-            const url_photo = `${req.protocol}://${req.get('host')}/artikel/${photoName}`;
-
-            // Simpan file ke direktori
-            try {
-                await photo.mv(`./public/artikel/${photoName}`);
-                link = url_photo; // Tetapkan URL photo jika berhasil diunggah
-            } catch (fileError) {
-                console.error("Error saving file:", fileError);
-                return res.status(500).json({ msg: "Gagal menyimpan file photo", error: fileError.message });
-            }
-        }
-
-        // Simpan data artikel ke database
-        const query = `
-            INSERT INTO artikel (judul, penulis, tanggal, isi, photo)
-            VALUES (?, ?, ?, ?, ?)`;
-        const values = [judul, penulis, tanggal, isi, link];
-
-        await db.promise().query(query, values);
-
-        res.status(201).json({ msg: "Artikel berhasil disimpan" });
-    } catch (error) {
-        console.error("Error in createArtikel:", error);
-        res.status(400).json({ msg: "Gagal melakukan simpan artikel", error: error.message });
+  try {
+    // Pastikan file foto ada
+    if (!req.files || !req.files.photo) {
+      return res.status(400).json({ msg: "Photo is required" });
     }
+
+    const photo = req.files.photo;
+
+    // Generate nama unik untuk foto menggunakan md5 dan ekstensi foto
+    const photoName = photo.md5 + path.extname(photo.name);
+
+    // Tentukan URL untuk mengakses foto
+    const photoUrl = `${req.protocol}://${req.get(
+      "host"
+    )}/artikel/${photoName}`;
+
+    // Tentukan path untuk menyimpan foto di server
+    const uploadPath = path.join(__dirname, "../public/artikel", photoName);
+
+    // Pindahkan foto ke folder public/artikel
+    await photo.mv(uploadPath);
+
+    // Simpan data artikel ke database
+    await db
+      .promise()
+      .query(
+        `INSERT INTO artikel (judul, penulis, tanggal, isi, photo) VALUES (?, ?, ?, ?, ?)`,
+        [judul, penulis, tanggal, isi, photoUrl]
+      );
+
+    res.status(201).json({ msg: "Artikel berhasil disimpan" });
+  } catch (error) {
+    console.error("Error in createArtikel:", error.stack || error);
+    res
+      .status(500)
+      .json({ msg: "Gagal menyimpan artikel", error: error.message });
+  }
 };
 
+// Update Artikel
+exports.updateArtikel = async (req, res) => {
+  const { id } = req.params;
+  const { judul, penulis, tanggal, isi } = req.body;
 
-// Ambil Data Artikel
-exports.getArtikel = async (req, res) => {
-    try {
-        const [artikel] = await db.promise().query(`
-            SELECT * FROM artikel`);
+  try {
+    const [artikelExist] = await db
+      .promise()
+      .query(`SELECT * FROM artikel WHERE id = ?`, [id]);
 
-        res.status(200).json(artikel);
-    } catch (error) {
-        console.error("Error in getartikel:", error);
-        res.status(500).json({ msg: "Gagal mengambil data artikel", error: error.message });
+    if (artikelExist.length === 0) {
+      return res.status(404).json({ msg: "Artikel tidak ditemukan" });
     }
+
+    let photoUrl = artikelExist[0].photo;
+
+    // Periksa apakah ada file foto baru
+    if (req.files && req.files.photo) {
+      const photo = req.files.photo;
+
+      // Hapus foto lama dari server jika ada foto baru
+      const oldPhotoPath = path.join(
+        __dirname,
+        "../public/artikel",
+        path.basename(photoUrl)
+      );
+
+      if (fs.existsSync(oldPhotoPath)) {
+        await fs.promises.unlink(oldPhotoPath); // Hapus foto lama
+      }
+
+      // Generate nama baru untuk foto
+      const photoName = photo.md5 + path.extname(photo.name);
+      photoUrl = `${req.protocol}://${req.get("host")}/artikel/${photoName}`;
+
+      // Tentukan path untuk menyimpan foto baru
+      const uploadPath = path.join(__dirname, "../public/artikel", photoName);
+
+      // Pindahkan foto baru ke folder public/artikel
+      await photo.mv(uploadPath);
+    }
+
+    // Perbarui data artikel di database
+    const [result] = await db
+      .promise()
+      .query(
+        `UPDATE artikel SET judul = ?, penulis = ?, tanggal = ?, isi = ?, photo = ? WHERE id = ?`,
+        [judul, penulis, tanggal, isi, photoUrl, id]
+      );
+
+    if (result.affectedRows === 0) {
+      return res
+        .status(404)
+        .json({ msg: "Artikel tidak ditemukan untuk diperbarui" });
+    }
+
+    res.status(200).json({ msg: "Artikel berhasil diperbarui" });
+  } catch (error) {
+    console.error("Error in updateArtikel:", error.stack || error);
+    res
+      .status(500)
+      .json({ msg: "Gagal memperbarui artikel", error: error.message });
+  }
+};
+
+// Hapus Artikel
+exports.deleteArtikel = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const [artikelExist] = await db
+      .promise()
+      .query(`SELECT * FROM artikel WHERE id = ?`, [id]);
+
+    if (artikelExist.length === 0) {
+      return res.status(404).json({ msg: "Artikel tidak ditemukan" });
+    }
+
+    // Hapus artikel berdasarkan ID
+    await db.promise().query(`DELETE FROM artikel WHERE id = ?`, [id]);
+
+    res.status(200).json({ msg: "Artikel berhasil dihapus" });
+  } catch (error) {
+    console.error("Error in deleteArtikel:", error);
+    res
+      .status(500)
+      .json({ msg: "Gagal menghapus artikel", error: error.message });
+  }
 };
 
 // Ambil Data Artikel Berdasarkan ID
 exports.getArtikelById = async (req, res) => {
-    const { id } = req.params; // Ambil id dari parameter URL
+  const { id } = req.params;
 
-    try {
-        const [artikel] = await db.promise().query(`
-            SELECT * FROM artikel WHERE id = ?`, [id]);
+  try {
+    const [artikel] = await db
+      .promise()
+      .query(`SELECT * FROM artikel WHERE id = ?`, [id]);
 
-        // Jika artikel tidak ditemukan
-        if (artikel.length === 0) {
-            return res.status(404).json({ msg: "Artikel tidak ditemukan" });
-        }
-
-        res.status(200).json(artikel[0]); // Kembalikan artikel pertama jika ditemukan
-    } catch (error) {
-        console.error("Error in getArtikelById:", error);
-        res.status(500).json({ msg: "Gagal mengambil data artikel", error: error.message });
+    if (artikel.length === 0) {
+      return res.status(404).json({ msg: "Artikel tidak ditemukan" });
     }
+
+    res.status(200).json(artikel[0]);
+  } catch (error) {
+    console.error("Error in getArtikelById:", error.stack || error);
+    res
+      .status(500)
+      .json({ msg: "Gagal mengambil data Artikel", error: error.message });
+  }
+};
+
+// Ambil Semua Artikel
+exports.getArtikel = async (req, res) => {
+  try {
+    const [artikel] = await db.promise().query(`SELECT * FROM artikel`);
+
+    if (artikel.length === 0) {
+      return res.status(404).json({ msg: "Tidak ada artikel ditemukan" });
+    }
+
+    res.status(200).json(artikel);
+  } catch (error) {
+    console.error("Error in getArtikel:", error.stack || error);
+    res
+      .status(500)
+      .json({ msg: "Gagal mengambil data Artikel", error: error.message });
+  }
 };

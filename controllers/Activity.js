@@ -24,7 +24,7 @@ exports.getActivities = async (req, res) => {
       }
 
       // Respond with the activities
-      const activities = results.map(row => ({
+      const activities = results.map((row) => ({
         id: row.user_id,
         username: `${row.first_name} ${row.last_name}`,
         invoice_number: row.invoice_number,
@@ -35,6 +35,8 @@ exports.getActivities = async (req, res) => {
     });
   } catch (error) {
     console.error("Error:", error.message);
-    return res.status(500).json({ error: "An error occurred while fetching activities." });
+    return res
+      .status(500)
+      .json({ error: "An error occurred while fetching activities." });
   }
 };
