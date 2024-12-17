@@ -385,3 +385,48 @@ exports.updateStatusTransaksi = async (req, res) => {
       });
   }
 };
+// Fungsi untuk memperbarui status transaksi
+exports.updateStatusTransaksi = async (req, res) => {
+  const { order_id } = req.params;
+  const { status_transaksi } = req.body;
+
+  try {
+      const transaksi = await Transaksi.findOneAndUpdate(
+          { order_id },
+          { status_transaksi },
+          { new: true }
+      );
+
+      if (!transaksi) {
+          return res.status(404).json({ message: 'Transaksi tidak ditemukan' });
+      }
+
+      res.status(200).json(transaksi);
+  } catch (error) {
+      console.error('Gagal memperbarui status transaksi:', error);
+      res.status(500).json({ message: 'Terjadi kesalahan server' });
+  }
+};
+
+// Fungsi untuk memperbarui status pembayaran
+exports.updateStatusPembayaran = async (req, res) => {
+  const { order_id } = req.params;
+  const { status_pembayaran } = req.body;
+
+  try {
+      const transaksi = await Transaksi.findOneAndUpdate(
+          { order_id },
+          { status_pembayaran },
+          { new: true }
+      );
+
+      if (!transaksi) {
+          return res.status(404).json({ message: 'Transaksi tidak ditemukan' });
+      }
+
+      res.status(200).json(transaksi);
+  } catch (error) {
+      console.error('Gagal memperbarui status pembayaran:', error);
+      res.status(500).json({ message: 'Terjadi kesalahan server' });
+  }
+};
