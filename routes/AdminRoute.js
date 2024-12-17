@@ -8,7 +8,7 @@ const router = express.Router();
 router.post("/loginadmin", Login);
 
 // Rute untuk logout
-router.delete("/logoutadmin", Logout);
+router.post("/logoutadmin", Logout);  // Menggunakan POST untuk logout lebih semantik sesuai dengan tindakan yang dilakukan
 
 // Rute yang dilindungi dengan token
 router.get("/dashboardadmin", verifyToken, (req, res) => {

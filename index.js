@@ -27,7 +27,7 @@ db.connect((err) => {
   }
 });
 createAdmin();
-app.use(cors({ credentials: false }));
+app.use(cors({credentials: false,})),
 app.use(cookieParser());
 app.use(express.json());
 app.use(FileUpload());
