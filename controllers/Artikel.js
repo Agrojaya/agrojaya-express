@@ -181,19 +181,36 @@ exports.getArtikel = async (req, res) => {
 
 // Ambil Data Artikel Berdasarkan ID
 exports.getArtikelById = async (req, res) => {
-  const { id } = req.params; // Ambil id dari parameter URL
+  const { id } = req.params;
 
   try {
+    // Query untuk mengambil artikel berdasarkan ID
     const [artikel] = await db
       .promise()
       .query(`SELECT * FROM artikel WHERE id = ?`, [id]);
 
-    // Jika artikel tidak ditemukan
     if (artikel.length === 0) {
       return res.status(404).json({ msg: "Artikel tidak ditemukan" });
     }
 
-    res.status(200).json(artikel[0]); // Kembalikan artikel pertama jika ditemukan
+    // Query untuk mengambil artikel terkait (misalnya, berdasarkan kategori atau acak)
+    const [relatedArticles] = await db
+      .promise()
+      .query(
+        `SELECT id, judul, photo, LEFT(isi, 100) AS summary 
+         FROM artikel 
+         WHERE id != ? 
+         ORDER BY RAND() LIMIT 4`, 
+        [id]
+      );
+
+    // Gabungkan data artikel utama dengan artikel terkait
+    const articleWithRelated = {
+      ...artikel[0],
+      relatedArticles,
+    };
+
+    res.status(200).json(articleWithRelated); 
   } catch (error) {
     console.error("Error in getArtikelById:", error);
     res
@@ -201,3 +218,4 @@ exports.getArtikelById = async (req, res) => {
       .json({ msg: "Gagal mengambil data artikel", error: error.message });
   }
 };
+
