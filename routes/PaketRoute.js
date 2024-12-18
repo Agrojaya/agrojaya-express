@@ -1,18 +1,12 @@
 const express = require("express");
 const {
-  getPaket,
-  getPaketById,
-  createPaket,
-  updatePaket,
-  deletePaket,
-} = require("../controllers/Paket");
+    createPaket, getPaket, getPaketById
+} = require ("../controllers/Paket.js");
 
 const router = express.Router();
 
-router.get("/data_paket", getPaket);
-router.get("/data_paket/:id", getPaketById);
-router.post("/data_paket", createPaket);
-router.put("/data_paket/:id", updatePaket);
-router.delete("/data_paket/:id", deletePaket);
-
+router.post('/paket', createPaket);
+router.get('/data_paket', getPaket);
+router.get('/data_paket/:id', getPaketById);
+ 
 module.exports = router;
