@@ -385,48 +385,33 @@ exports.updateStatusTransaksi = async (req, res) => {
       });
   }
 };
-// Fungsi untuk memperbarui status transaksi
-exports.updateStatusTransaksi = async (req, res) => {
+// Fungsi untuk memperbarui transaksi
+exports.updateTransaksi = async (req, res) => {
   const { order_id } = req.params;
-  const { status_transaksi } = req.body;
+  const { status_pembayaran, status_transaksi, variasi_bibit } = req.body;
 
   try {
-      const transaksi = await Transaksi.findOneAndUpdate(
-          { order_id },
-          { status_transaksi },
-          { new: true }
-      );
+    const [transaksi] = await db.promise().query(
+      'SELECT * FROM transaksi WHERE order_id = ?',
+      [order_id]
+    );
 
-      if (!transaksi) {
-          return res.status(404).json({ message: 'Transaksi tidak ditemukan' });
-      }
+    if (transaksi.length === 0) {
+      return res.status(404).json({ msg: "Transaksi tidak ditemukan" });
+    }
 
-      res.status(200).json(transaksi);
+    const updateQuery = `
+      UPDATE transaksi 
+      SET status_pembayaran = ?, status_transaksi = ?, variasi_bibit = ?
+      WHERE order_id = ?
+    `;
+    const values = [status_pembayaran, status_transaksi, variasi_bibit, order_id];
+
+    await db.promise().execute(updateQuery, values);
+
+    res.status(200).json({ msg: "Transaksi berhasil diperbarui" });
   } catch (error) {
-      console.error('Gagal memperbarui status transaksi:', error);
-      res.status(500).json({ message: 'Terjadi kesalahan server' });
-  }
-};
-
-// Fungsi untuk memperbarui status pembayaran
-exports.updateStatusPembayaran = async (req, res) => {
-  const { order_id } = req.params;
-  const { status_pembayaran } = req.body;
-
-  try {
-      const transaksi = await Transaksi.findOneAndUpdate(
-          { order_id },
-          { status_pembayaran },
-          { new: true }
-      );
-
-      if (!transaksi) {
-          return res.status(404).json({ message: 'Transaksi tidak ditemukan' });
-      }
-
-      res.status(200).json(transaksi);
-  } catch (error) {
-      console.error('Gagal memperbarui status pembayaran:', error);
-      res.status(500).json({ message: 'Terjadi kesalahan server' });
+    console.error('Error updating transaksi:', error);
+    res.status(500).json({ msg: "Gagal memperbarui transaksi", error: error.message });
   }
 };

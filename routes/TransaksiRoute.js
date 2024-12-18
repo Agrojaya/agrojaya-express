@@ -6,7 +6,7 @@ const {
     getTransaksiByUid,
     getStatus,
     updateStatusTransaksi,
-    updateStatusPembayaran
+    updateTransaksi
 } = require ("../controllers/Transaksi.js");
 
 const router = express.Router();
@@ -17,6 +17,5 @@ router.get('/transaksi/byuid/:uid', getTransaksiByUid);
 router.get('/transaksi/status/:order_id', getStatus);
 router.get('/transaksis', getAllTransaksi);
 router.patch('/transaksi/updatestatus/:order_id', updateStatusTransaksi);
-router.put('/transaksi/:order_id/status-transaksi', updateStatusTransaksi);
-router.put('/transaksi/:order_id/status-pembayaran', updateStatusPembayaran);
+router.put('/transaksi/:order_id/update', updateTransaksi);
 module.exports = router;
